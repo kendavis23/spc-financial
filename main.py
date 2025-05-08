@@ -24,8 +24,6 @@ def main(request):
     #s = buffer.getvalue()
     #print(s)
     #print(df_virgin.head().to_string())
-    
-    #Test to see if change to source code is working
 
     rev_df = revenue(df_virgin)
     print(rev_df.head().to_string())
@@ -90,28 +88,28 @@ def revenue (virgin_df):
     WHERE File = 'virgin' AND Type = 'revenue'
     """
     ex_df = client.query(ex_query).to_dataframe()
-    rc_df = pd.DataFrame()
+
+    rc_query = """
+    SELECT Substring, Category 
+    FROM `spc-sandbox-453019.financials.revenue_categories` 
+    WHERE File = 'virgin'
+    """
+    rc_df = client.query(rc_query).to_dataframe()
 
     return updateci(rc_df, ex_df, rev_df)
-
-    #return rev_df
 
 def cost(virgin_df):
 
     cost_df = virgin_df[virgin_df['Type'] == "Cost"]
     cost_df = cost_df.reset_index(drop=True)
 
-    for index, row in cost_df.iterrows(): 
-        description = cost_df.loc[index, 'Description']
-        desc = description[:23]
-        desc = desc.lower()
-        if desc == 'mob, padel solutions uk':
-            cost_df.loc[index, 'Ops_Include'] = False
+    client = bigquery.Client()
+    ex_query = """
+    SELECT Substring 
+    FROM `spc-sandbox-453019.financials.config-ops-exclude` 
+    WHERE File = 'virgin' AND Type = 'cost'
+    """
+    ex_df = client.query(ex_query).to_dataframe()
+    rc_df = pd.DataFrame()
 
-    
-
-    return cost_df
-
-        
-
-
+    return updateci(rc_df, ex_df, cost_df)
